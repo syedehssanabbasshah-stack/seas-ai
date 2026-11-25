@@ -8,6 +8,7 @@
 import { state, persona } from './state.js';
 import { runSkill } from './skills.js';
 import { searchMemories, listMemories } from './memory.js';
+import { isDesktop } from './desktop.js';
 
 let engineNoteShown = false;
 
@@ -21,7 +22,9 @@ function systemPrompt() {
     `Personality: ${p.style}`,
     `Voice: your words are spoken aloud by a speech engine, so write natural sentences — no markdown, no bullet symbols, no code fences unless explicitly asked.`,
     `Keep most answers to one to three sentences. Be specific and useful; skip filler and disclaimers.`,
-    `You already have working local skills: opening sites, YouTube playback, web search, maths, timers, notes and to-dos, memory storage and device reports. Never claim to control the operating system, files, or installed apps — this build runs in a browser.`,
+    isDesktop()
+      ? `You run inside the Seas AI PC app on ${navigator.platform || 'this computer'} and can really act on it: open and close apps, set the volume and send media keys, take screenshots (they appear in the transcript), find and read files, create folders and files, type into the active window, press shortcuts, arrange windows and virtual desktops, show a message box, lock, sleep or shut down. The skill matrix performs these actions, so never claim a result you did not get back.`
+      : `You already have working local skills: opening sites, YouTube playback, web search, maths, timers, notes and to-dos, memory storage and device reports. Never claim to control the operating system, files, or installed apps — this build runs in a browser.`,
     `If the user writes in Urdu or Roman Urdu, answer in the same language.`,
     `Current local time: ${new Date().toLocaleString()}.`,
     mems ? `Things you remember about the user:\n${mems}` : `You have no stored memories about the user yet.`,
