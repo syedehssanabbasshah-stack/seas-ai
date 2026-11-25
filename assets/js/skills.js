@@ -5,6 +5,7 @@
 
 import { addMemory, searchMemories, listMemories, wipeMemories } from './memory.js';
 import { state } from './state.js';
+import { isDesktop, pcRun, pcNews } from './desktop.js';
 
 const TODO_KEY = 'stonic.todos.v1';
 
@@ -133,6 +134,25 @@ async function batteryLine() {
 
 /* ═══════════════════ SKILLS ═══════════════════ */
 
+/* ───────────── desktop gateway ───────────── */
+
+const DESKTOP_APPS = new Set([
+  'notepad', 'calculator', 'calc', 'paint', 'chrome', 'edge', 'firefox', 'explorer', 'files',
+  'file explorer', 'vscode', 'code', 'word', 'excel', 'powerpoint', 'spotify', 'whatsapp',
+  'telegram', 'discord', 'vlc', 'cmd', 'terminal', 'settings', 'task manager', 'camera',
+  'snipping tool', 'clock', 'store', 'control',
+]);
+
+const desktopOnly = () => ({
+  reply: 'That needs the Seas AI PC app — this build is running in a browser, where the operating system is out of reach.',
+});
+
+async function useDesktop(tool, args, format) {
+  if (!isDesktop()) return desktopOnly();
+  const result = await pcRun(tool, args);
+  return format(result);
+}
+
 export const SKILLS = [
   {
     id: 'greet',
@@ -194,9 +214,35 @@ export const SKILLS = [
     name: 'LAUNCHER',
     desc: 'Open a site or app',
     re: /^(?:open|launch|khol(?:o|do)?)\s+(.+)$/i,
-    run: (m) => {
+    run: async (m) => {
       const target = m[1].trim();
       if (/^(my )?(todos?|tasks?|list|memory|memories|chat|settings)$/i.test(target)) return null;
+      const key = target.toLowerCase().replace(/\s+/g, ' ').trim();
+      if (isDesktop()) {
+        const folderMap = {
+          files: '~/Documents',
+          folder: '~/Documents',
+          documents: '~/Documents',
+          downloads: '~/Downloads',
+          desktop: '~/Desktop',
+          pictures: '~/Pictures',
+          music: '~/Music',
+          videos: '~/Videos',
+        };
+        const folder = folderMap[key] || folderMap[key.replace(/^my /, '')];
+        try {
+          if (DESKTOP_APPS.has(key) || /\.(exe|lnk)$/i.test(key)) {
+            const result = await pcRun('open_app', { name: key });
+            return { reply: `Opening ${result.app}.` };
+          }
+          if (folder) {
+            await pcRun('open_path', { path: folder });
+            return { reply: `Opened your ${key.replace(/^my /, '')} folder.` };
+          }
+        } catch (err) {
+          return { reply: `The desktop refused that: ${err?.message || err}` };
+        }
+      }
       const site = findSite(target);
       if (site) {
         openUrl(site.url);
@@ -232,10 +278,29 @@ export const SKILLS = [
     name: 'WEB SEARCH',
     desc: 'Look something up',
     re: /^(?:search|google|look up|find|dhundo|khojo)\s+(?:for\s+)?(.{2,120})$/i,
-    run: (m) => {
-      const url = `https://www.google.com/search?q=${encodeURIComponent(m[1])}`;
+    run: async (m) => {
+      const target = m[1].trim();
+      if (isDesktop() && /\b(file|files|folder|document|documents|pdf|docx?|xlsx?|txt|desktop|downloads|pictures)\b/i.test(target)) {
+        const words = target
+          .replace(/\b(find|search|for|my|the|file|files|folder|document|documents|in|inside)\b/gi, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        try {
+          const found = await pcRun('find_files', { query: words || target });
+          if (found.paths.length) {
+            const lines = found.paths.slice(0, 8).map((item) => `• ${item}`).join('\n');
+            return { reply: `Found ${found.paths.length} match${found.paths.length === 1 ? '' : 'es'}:\n${lines}` };
+          }
+          const docs = await pcRun('doc_search', { query: words || target });
+          if (docs.excerpt) return { reply: `Nothing by name, but these files mention it:\n${docs.excerpt.slice(0, 700)}` };
+          return { reply: `I found nothing on this device for “${words || target}”.` };
+        } catch (err) {
+          return { reply: `File search failed: ${err?.message || err}` };
+        }
+      }
+      const url = `https://www.google.com/search?q=${encodeURIComponent(target)}`;
       openUrl(url);
-      return { reply: `Searching the web for “${m[1]}”.`, url };
+      return { reply: `Searching the web for “${target}”.`, url };
     },
   },
   {
@@ -328,6 +393,19 @@ export const SKILLS = [
     desc: 'Scan this device',
     re: /\b(system (scan|status|info)|how is my (pc|computer|laptop|device)|check (my )?(ram|cpu|battery)|device info)\b/i,
     run: async () => {
+      if (isDesktop()) {
+        try {
+          const info = await pcRun('system_info');
+          return {
+            reply:
+              `Scan complete.\n• System: ${info.os} (${info.arch})\n• CPU: ${info.cpu_model} · ${info.cpus} threads\n` +
+              `• Memory: ${info.ram_used_percent}% used of ${info.ram_total_gb} GB\n` +
+              (info.disk_free_gb != null ? `• Disk free: ${info.disk_free_gb} GB\n` : '') +
+              `• Uptime: ${info.uptime_hours} h · user ${info.user}\n` +
+              `• Engine: ${state.apiKey ? state.model : 'local core'}`,
+          };
+        } catch { /* fall through to the browser report */ }
+      }
       const cores = navigator.hardwareConcurrency || 'unknown';
       const ram = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'not reported';
       const net = navigator.onLine ? 'online' : 'offline';
@@ -339,6 +417,210 @@ export const SKILLS = [
           `• Network: ${net}${bat ? `\n• Battery: ${bat}` : ''}\n` +
           `• Engine: ${state.apiKey ? state.model : 'local core'}`,
       };
+    },
+  },
+  {
+    id: 'research',
+    name: 'RESEARCH',
+    desc: 'Search the web and read it',
+    re: /^(?:research|web research|look up online|read about|search (?:the )?(?:web|internet) (?:for )?)\s*(.{2,160})$/i,
+    run: async (m) => {
+      if (!isDesktop()) return null;
+      const result = await pcRun('research', { query: m[1] });
+      if (!result.hits.length) return null;
+      const lines = result.hits
+        .slice(0, 4)
+        .map((hit, i) => `${i + 1}. ${hit.title} — ${hit.snippet.slice(0, 160)} (${hit.url})`)
+        .join('\n');
+      const page = result.page ? `\n\nFrom the top result: ${result.page.slice(0, 500)}` : '';
+      return { reply: `Research on “${result.query}”:\n${lines}${page}`, url: result.hits[0].url };
+    },
+  },
+  {
+    id: 'screenshot',
+    name: 'SCREENSHOT',
+    desc: 'Capture this screen',
+    re: /\b(take (?:a )?screenshot|screenshot|capture (?:the )?screen|screen ?shot|snap (?:the )?screen)\b/i,
+    run: () =>
+      useDesktop('screenshot', {}, (shot) => ({
+        reply: 'Screenshot captured from your screen — it is in the transcript and no file was left behind.',
+        image: shot.image,
+        mime: shot.mime || 'image/jpeg',
+      })),
+  },
+  {
+    id: 'volume',
+    name: 'SOUND',
+    desc: 'Set the volume',
+    re: /^(?:set )?(?:the )?(?:volume|sound|awaaz)(?: (?:to|at))?\s*(\d{1,3})%?$|\bvolume (up|down)\b|\b(mute|unmute)\b|\bawaaz (?:kam|zyada|tez|dheemi)\b/i,
+    run: (m, text) => {
+      const t = text.toLowerCase();
+      if (/unmute|awaaz (zyada|tez)/.test(t)) return useDesktop('media', { action: 'mute' }, () => ({ reply: 'Sound is back on.' }));
+      if (/\bmute\b/.test(t)) return useDesktop('media', { action: 'mute' }, () => ({ reply: 'Muted.' }));
+      if (/volume up|awaaz zyada|awaaz tez/.test(t)) {
+        return useDesktop('media', { action: 'volume_up', amount: 6 }, () => ({ reply: 'Volume up.' }));
+      }
+      if (/volume down|awaaz kam|awaaz dheemi/.test(t)) {
+        return useDesktop('media', { action: 'volume_down', amount: 6 }, () => ({ reply: 'Volume down.' }));
+      }
+      const level = Number(m[1]);
+      if (!Number.isFinite(level)) return null;
+      return useDesktop('set_volume', { level }, (result) => ({ reply: `Volume set to about ${result.level}%.` }));
+    },
+  },
+  {
+    id: 'media-keys',
+    name: 'PLAYBACK',
+    desc: 'Pause or skip the track',
+    re: /^(?:pause|resume|toggle (?:play|playback))(?: (?:the )?(?:music|song|video|playback))?$|^(?:next|previous|skip)(?: (?:track|song|video))?$/i,
+    run: (m, text) => {
+      const t = text.toLowerCase();
+      const action = /next|skip/.test(t) ? 'next' : /previous|prev/.test(t) ? 'previous' : 'play_pause';
+      return useDesktop('media', { action }, () => ({
+        reply: action === 'play_pause' ? 'Toggled playback.' : action === 'next' ? 'Skipped forward.' : 'Went back a track.',
+      }));
+    },
+  },
+  {
+    id: 'lock',
+    name: 'SECURITY',
+    desc: 'Lock the screen',
+    re: /\block (?:the |my )?(?:pc|computer|screen|windows|machine)\b|\block it\b/i,
+    run: () => useDesktop('lock_screen', {}, () => ({ reply: 'Screen locked.' })),
+  },
+  {
+    id: 'power',
+    name: 'POWER',
+    desc: 'Shut down, restart or sleep',
+    re: /^(?:please )?(?:shut ?down|restart|reboot|hibernate|sleep|log ?off|sign ?out|cancel (?:the )?shutdown|turn off (?:the )?(?:monitors?|screen|display))\b/i,
+    run: (m, text) => {
+      const t = text.toLowerCase();
+      const action = /cancel/.test(t)
+        ? 'cancel'
+        : /restart|reboot/.test(t)
+          ? 'restart'
+          : /hibernate/.test(t)
+            ? 'hibernate'
+            : /log ?off|sign ?out/.test(t)
+              ? 'logoff'
+              : /sleep/.test(t)
+                ? 'sleep'
+                : /monitor|screen|display/.test(t)
+                  ? 'monitors_off'
+                  : 'shutdown';
+      const replies = {
+        cancel: 'Shutdown cancelled.',
+        restart: 'Restarting in 30 seconds. Say “cancel shutdown” to stop it.',
+        hibernate: 'Hibernating now.',
+        logoff: 'Logging out.',
+        sleep: 'Going to sleep now.',
+        monitors_off: 'Monitors off — move the mouse to wake them.',
+        shutdown: 'Shutting down in 30 seconds. Say “cancel shutdown” to stop it.',
+      };
+      return useDesktop('power', { action }, () => ({ reply: replies[action] }));
+    },
+  },
+  {
+    id: 'windows',
+    name: 'WINDOWS',
+    desc: 'Arrange the desktop',
+    re: /^(?:minimi[sz]e all|show desktop|switch window|close (?:this )?window|maximi[sz]e (?:this )?window|minimi[sz]e (?:this )?window|task view)$/i,
+    run: (m, text) => {
+      const t = text.toLowerCase();
+      const action = /minimi[sz]e all/.test(t)
+        ? 'minimize_all'
+        : /show desktop/.test(t)
+          ? 'show_desktop'
+          : /switch/.test(t)
+            ? 'switch_window'
+            : /close/.test(t)
+              ? 'close_window'
+              : /maximi/.test(t)
+                ? 'maximize'
+                : /minimi/.test(t)
+                  ? 'minimize'
+                  : 'task_view';
+      return useDesktop('window_control', { action }, () => ({ reply: `${action.replace(/_/g, ' ')} done.` }));
+    },
+  },
+  {
+    id: 'keys',
+    name: 'KEYBOARD',
+    desc: 'Copy, paste, save, undo',
+    re: /^(?:press )?(copy|paste|cut|undo|redo|select all|save|find|new tab|close tab|reopen tab|next tab|refresh page|fullscreen|enter|escape|page down|page up|print|zoom in|zoom out)$/i,
+    run: (m) => {
+      const key = m[1].toLowerCase().replace(/\s+/g, '_').replace('refresh_page', 'refresh');
+      return useDesktop('press_keys', { keys: key }, () => ({ reply: `${key.replace(/_/g, ' ')} sent to the active window.` }));
+    },
+  },
+  {
+    id: 'desktops',
+    name: 'WORKSPACES',
+    desc: 'Virtual desktops',
+    re: /^(?:new desktop|next desktop|previous desktop|switch desktop|close desktop)$/i,
+    run: (m, text) => {
+      const t = text.toLowerCase();
+      const action = /new/.test(t) ? 'new' : /close/.test(t) ? 'close' : /next|switch/.test(t) ? 'right' : 'left';
+      return useDesktop('virtual_desktop', { action }, () => ({
+        reply: action === 'left' ? 'Moved to the previous desktop.' : action === 'right' ? 'Moved to the next desktop.' : `${action} desktop done.`,
+      }));
+    },
+  },
+  {
+    id: 'popup',
+    name: 'ALERT',
+    desc: 'Show a Windows popup',
+    re: /^(?:show|display|pop up)\s+(?:a\s+)?(?:message|alert|popup|notification)\s*[:,-]?\s*(.{2,300})$/i,
+    run: (m) => useDesktop('message_box', { text: m[1] }, () => ({ reply: 'Message shown on your desktop.' })),
+  },
+  {
+    id: 'make-folder',
+    name: 'FILES',
+    desc: 'Create a folder',
+    re: /^(?:make|create|new)\s+(?:a\s+)?(?:folder|directory)\s+(?:called\s+|named\s+)?(.{1,80})$/i,
+    run: (m) => useDesktop('make_folder', { name: m[1] }, (result) => ({ reply: result.message })),
+  },
+  {
+    id: 'create-file',
+    name: 'FILES',
+    desc: 'Create a text file',
+    re: /^(?:make|create|new)\s+(?:a\s+)?(?:text\s+)?file\s+(?:called\s+|named\s+)?(.{1,80})$/i,
+    run: (m) => useDesktop('create_file', { name: m[1], where: 'desktop' }, (result) => ({ reply: result.message })),
+  },
+  {
+    id: 'type-text',
+    name: 'KEYBOARD',
+    desc: 'Type into the active app',
+    re: /^(?:type|write|likho)\s*(?:this)?\s*[:,-]?\s*["“]?(.{2,240}?)["”]?$/i,
+    run: (m) =>
+      useDesktop('type_text', { text: m[1].replace(/^["“]|["”]$/g, '') }, (result) => ({
+        reply: `Typed ${result.chars} characters into the active window.`,
+      })),
+  },
+  {
+    id: 'recycle',
+    name: 'FILES',
+    desc: 'Send a file to the Recycle Bin',
+    re: /^(?:delete|recycle|trash)\s+(?:the\s+)?(?:file\s+)?(.{2,120})$/i,
+    run: async (m) => {
+      if (!isDesktop()) return desktopOnly();
+      const found = await pcRun('find_files', { query: m[1] });
+      if (!found.paths.length) return { reply: `I could not find “${m[1]}” in your Desktop, Documents, Downloads or Seas_Files folders.` };
+      const exact = found.paths.find((item) => item.toLowerCase().endsWith(m[1].toLowerCase())) || found.paths[0];
+      const result = await pcRun('delete_file', { path: exact });
+      return { reply: `${result.message}${found.paths.length > 1 ? ` (${found.paths.length} matches, used the closest one)` : ''}` };
+    },
+  },
+  {
+    id: 'news',
+    name: 'NEWS',
+    desc: "Today's headlines",
+    re: /\b(?:news|headlines|khabar(?:ein)?|akhbar)\b/i,
+    run: async () => {
+      if (!isDesktop()) return null;
+      const items = await pcNews(6);
+      if (!items.length) return null;
+      return { reply: `Right now:\n${items.map((item, i) => `${i + 1}. ${item.title}`).join('\n')}` };
     },
   },
   {
@@ -415,7 +697,7 @@ export const SKILLS = [
     id: 'sleep',
     name: 'CORE',
     desc: 'Stand down',
-    re: /^(?:goodbye|bye|good night|sleep|band ho jao|shutdown)$/i,
+    re: /^(?:goodbye|bye|good night|band ho jao)$/i,
     run: () => ({ reply: 'Standing by. Say my name when you need me.', sleep: true }),
   },
 ];
