@@ -1,9 +1,9 @@
-/* ════════════════════════════════════════════
+/* ══════════════════════════════════════════════
    brain.js — reasoning layer
    1. deterministic skills
    2. remote engine (any OpenAI-compatible endpoint)
    3. local core fallback (always available)
-   ════════════════════════════════════════════ */
+   ══════════════════════════════════════════════ */
 
 import { state, persona } from './state.js';
 import { runSkill } from './skills.js';
@@ -17,7 +17,7 @@ function systemPrompt() {
   const p = persona();
   const mems = listMemories().slice(0, 12).map((m) => `- ${m.text}`).join('\n');
   return [
-    `You are STONIC, a sci-fi desktop intelligence living inside the user's browser.`,
+    `You are SEAS AI, a sci-fi desktop intelligence living inside the user's desktop.`,
     `Personality: ${p.style}`,
     `Voice: your words are spoken aloud by a speech engine, so write natural sentences — no markdown, no bullet symbols, no code fences unless explicitly asked.`,
     `Keep most answers to one to three sentences. Be specific and useful; skip filler and disclaimers.`,
