@@ -45,7 +45,6 @@
           ]
         }
       ],
-      "icon": "build/icon.png",
       "artifactName": "Stonic-AI-${version}-Setup.${ext}"
     },
     "nsis": {
@@ -68,7 +67,6 @@
           ]
         }
       ],
-      "icon": "build/icon.png",
       "syncDesktopName": true,
       "category": "Utility",
       "synopsis": "Sci-fi AI desktop assistant",
