@@ -1,4 +1,4 @@
-# STONIC AI · Generation 3 (web build)
+# SEAS AI · Generation 3 (web build)
 
 A sci-fi AI desktop character in a single browser page — voice in, voice out, memory of you,
 an on-device skill matrix, a multi-agent "Agent Town", and an optional AI engine for real conversation.
@@ -29,23 +29,25 @@ Pre-built installers are attached to every tagged GitHub release (**Releases** p
 
 | Platform | File | Install |
 | --- | --- | --- |
-| Windows 10/11 (x64) | `Stonic-AI-<version>-Setup.exe` | Run it, choose the folder, finish. Desktop + Start-menu shortcuts are created. |
-| Linux (x64) | `Stonic-AI-<version>-x86_64.AppImage` | `chmod +x Stonic-AI-*.AppImage` then run it. |
+| Windows 10/11 (x64) | `Seas-AI-<version>-Setup.exe` | Run it, choose the folder, finish. Desktop + Start-menu shortcuts are created. |
+| Linux (x64) | `Seas-AI-<version>-x86_64.AppImage` | `chmod +x Seas-AI-*.AppImage` then run it. |
 
-The Windows installer is not code-signed, so SmartScreen may show “Windows protected your PC”
-— choose **More info → Run anyway**.
+The Windows build is **not code-signed**. With Smart App Control (Windows 11) an unsigned app is
+blocked outright — there is no “Run anyway” and no per-app exception; only a code-signing
+certificate fixes it (or turning Smart App Control off, which cannot be turned back on without
+reinstalling Windows). On plain SmartScreen you can choose **More info → Run anyway**.
 
 Build them yourself (electron-builder):
 
 ```bash
 npm install
-npm run dist:win     # dist/Stonic-AI-<version>-Setup.exe   (run on Windows, or Linux + wine)
-npm run dist:linux   # dist/Stonic-AI-<version>-x86_64.AppImage
+npm run dist:win     # dist/Seas-AI-<version>-Setup.exe   (run on Windows, or Linux + wine)
+npm run dist:linux   # dist/Seas-AI-<version>-x86_64.AppImage
 npm run dist         # installer for the current OS
 npm run pack         # unpacked app in dist/ (quick smoke test)
 ```
 
-Publishing: push a tag such as `v3.1.22` and `.github/workflows/build-installers.yml` builds
+Publishing: push a tag such as `v3.1.23` and `.github/workflows/build-installers.yml` builds
 both installers on GitHub runners and attaches them to the release automatically. You can
 also trigger it manually from the **Actions** tab (workflow_dispatch); that run keeps the
 files as downloadable workflow artifacts instead of creating a release.
@@ -70,7 +72,7 @@ model (transformers.js, ~40 MB downloaded once, then cached and offline). Typing
 
 The same shell runs as a native desktop window — frameless, with the top-bar minimize /
 maximize / close buttons wired to the real window. It is served over a private
-`app://stonic` scheme, because ES modules need a real origin and `file://` cannot load them.
+`app://seas` scheme, because ES modules need a real origin and `file://` cannot load them.
 
 ```bash
 npm install     # installs Electron (dev dependency only)
@@ -116,7 +118,7 @@ NSIS `.exe` installer on Windows and an `.AppImage` on Linux.
 | --- | --- |
 | **Core orb** | Canvas renderer with five states: idle, listening, processing, speaking, standby. Reacts to real activity. |
 | **Conversation** | Chat with typewriter output, transcript restored from local storage. |
-| **Voice** | Speech recognition (mic button or `Ctrl/⌘ + M`) with an on-device Whisper fallback, optional wake word ("hey stonic"), speech synthesis with a single **Male / Female** switch (SYSTEM → VOICE). |
+| **Voice** | Speech recognition (mic button or `Ctrl/⌘ + M`) with an on-device Whisper fallback, optional wake word ("hey seas"), speech synthesis with a single **Male / Female** switch (SYSTEM → VOICE). |
 | **Memory** | Facts live in `localStorage`. "remember that …", "my name is …" and similar sentences are captured automatically. |
 | **Skills** | 20 on-device modules: open sites, YouTube, web search, maths, timers, notes/to-dos, device report, weather, WhatsApp draft, coin/dice, memory, session control. |
 | **Agent Town** | Four local seats (Researcher, Builder, Analyst, Critic) walk a grid, take a task and report back. A simulation of a multi-agent office, entirely client-side. |
@@ -149,7 +151,8 @@ Some providers block cross-origin browser requests (CORS); if you see
 main.js                 Electron main process (app:// scheme, window, permissions)
 preload.js              contextBridge window-control API
 package.json            Electron scripts, electron-builder config, dev dependencies
-build/icon.png          app / installer icon (512+ px, used for .exe and AppImage)
+build/icon.png          optional app icon — not committed here; add it and re-enable the
+                        win.icon / linux.icon fields to make installers use it
 .github/workflows/      CI that builds both installers and publishes a release
 index.html              HUD markup, boot sequence, modules
 assets/css/style.css    design system, layout, animation
