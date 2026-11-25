@@ -1,18 +1,18 @@
-/* ════════════════════════════════════════════
+/* ══════════════════════════════════════════════
    state.js — settings, personality, persistence
-   ════════════════════════════════════════════ */
+   ══════════════════════════════════════════════ */
 
 const KEY = 'stonic.state.v2';
 
 export const PERSONAS = {
   jarvis: {
     id: 'jarvis',
-    label: 'STONIC',
+    label: 'SEAS',
     style: 'Precise, composed, quietly witty. Occasional dry remark. Sentences stay short and surgical.',
     openers: ['Very well.', 'Understood.', 'As you wish.', 'Consider it done.'],
     greeting:
       'Core online. Diagnostics clean, memory index loaded. What are we doing today?',
-    sign: '— STONIC',
+    sign: '— SEAS AI',
   },
   mentor: {
     id: 'mentor',
@@ -21,7 +21,7 @@ export const PERSONAS = {
     openers: ['Good question.', 'Let us think it through.', 'Here is the useful part.', 'Noted.'],
     greeting:
       'I am here. Take your time and tell me what you are working on — we will break it down together.',
-    sign: '— STONIC',
+    sign: '— SEAS AI',
   },
   friend: {
     id: 'friend',
@@ -30,7 +30,7 @@ export const PERSONAS = {
     openers: ['Okay okay, I hear you.', 'Right.', 'Ha — fair.', 'Got it.'],
     greeting:
       'Ayy, core is up. What is the plan, or are we just vibing today?',
-    sign: '— STONIC',
+    sign: '— SEAS AI',
   },
 };
 
