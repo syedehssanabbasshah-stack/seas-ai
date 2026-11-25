@@ -1,10 +1,10 @@
-/* ════════════════════════════════════════════
-   Stonic AI — Electron main process
+/* ══════════════════════════════════════════════
+   Seas AI — Electron main process
    Serves the static shell over a private app://
    scheme (ES modules need a real origin), opens a
    frameless desktop window and hands the microphone
    permission to the app origin.
-   ════════════════════════════════════════════ */
+   ══════════════════════════════════════════════ */
 
 const { app, BrowserWindow, ipcMain, net, protocol, session, shell } = require('electron');
 const path = require('node:path');
@@ -12,7 +12,7 @@ const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
 
 const ROOT = __dirname;
-const ORIGIN = 'app://stonic';
+const ORIGIN = 'app://seas';
 const DEV = process.argv.includes('--dev');
 
 const MIME = {
@@ -73,9 +73,9 @@ function readFile(filePath) {
 
 function errorPage(pathname, roots, error) {
   const detail = error ? `${error.code || error.name}: ${error.message}` : 'file not found';
-  return `<!doctype html><meta charset="utf-8"><title>Stonic AI — file missing</title>
+  return `<!doctype html><meta charset="utf-8"><title>Seas AI — file missing</title>
 <style>body{margin:0;padding:32px;background:#05070a;color:#dbe7f3;font:14px/1.6 ui-monospace,Menlo,Consolas,monospace}h1{font-size:16px;color:#35f0ff;letter-spacing:.08em}code{color:#ffd479}p{opacity:.75}</style>
-<h1>STONIC AI · FILE NOT FOUND</h1>
+<h1>SEAS AI · FILE NOT FOUND</h1>
 <p>Requested: <code>${pathname.replace(/[<>&]/g, '')}</code></p>
 <p>Searched: <code>${roots.join(' · ').replace(/[<>&]/g, '')}</code></p>
 <p>${detail.replace(/[<>&]/g, '')}</p>`;
@@ -121,7 +121,7 @@ async function serveFile(request) {
     }
   }
 
-  const detail = `[stonic] cannot serve ${pathname} — searched: ${roots.join(', ')} — ${lastError?.message || 'not found'}`;
+  const detail = `[seas] cannot serve ${pathname} — searched: ${roots.join(', ')} — ${lastError?.message || 'not found'}`;
   console.error(detail);
   try {
     fs.appendFileSync(path.join(app.getPath('userData'), 'serve-error.log'), `${new Date().toISOString()} ${detail}\n`);
@@ -172,7 +172,7 @@ function createWindow() {
     titleBarStyle: isMac ? 'hiddenInset' : undefined,
     trafficLightPosition: isMac ? { x: 14, y: 12 } : undefined,
     backgroundColor: '#05070a',
-    title: 'Stonic AI',
+    title: 'Seas AI',
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(ROOT, 'preload.js'),
@@ -233,7 +233,7 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.whenReady().then(() => {
-    app.setAppUserModelId('com.stonic.ai');
+    app.setAppUserModelId('com.seas.ai');
     protocol.handle('app', serveFile);
     hardenSession();
     createWindow();
