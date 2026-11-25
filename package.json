@@ -1,7 +1,7 @@
 {
   "name": "seas-ai-desktop",
   "productName": "Seas AI",
-  "version": "3.1.23",
+  "version": "3.1.24",
   "description": "Seas AI — desktop personal assistant shell (Electron wrapper)",
   "author": "Seas AI",
   "main": "main.js",
