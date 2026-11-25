@@ -1,0 +1,86 @@
+{
+  "name": "stonic-ai-desktop",
+  "productName": "Stonic AI",
+  "version": "3.1.22",
+  "description": "Stonic AI — desktop personal assistant shell (Electron wrapper)",
+  "author": "Stonic AI",
+  "main": "main.js",
+  "desktopName": "com.stonic.ai.desktop",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --publish never",
+    "dist:win": "electron-builder --win nsis --publish never",
+    "dist:linux": "electron-builder --linux AppImage --publish never"
+  },
+  "devDependencies": {
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "com.stonic.ai",
+    "productName": "Stonic AI",
+    "copyright": "Copyright © 2026 Stonic AI",
+    "asar": false,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "index.html",
+      "main.js",
+      "preload.js",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "artifactName": "Stonic-AI-${version}-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Stonic AI",
+      "runAfterFinish": true,
+      "uninstallDisplayName": "Stonic AI ${version}"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "syncDesktopName": true,
+      "category": "Utility",
+      "synopsis": "Sci-fi AI desktop assistant",
+      "description": "Stonic AI — voice-driven sci-fi desktop assistant shell.",
+      "desktop": {
+        "entry": {
+          "Name": "Stonic AI",
+          "Comment": "Sci-fi AI desktop assistant",
+          "Categories": "Utility;"
+        }
+      },
+      "artifactName": "Stonic-AI-${version}-${arch}.${ext}"
+    }
+  }
+}
