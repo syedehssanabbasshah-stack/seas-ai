@@ -1,6 +1,6 @@
-/* ════════════════════════════════════════════
+/* ══════════════════════════════════════════════
    app.js — the console that binds it all together
-   ════════════════════════════════════════════ */
+   ══════════════════════════════════════════════ */
 
 import { state, saveState, persona, DEFAULTS } from './state.js';
 import { respond } from './brain.js';
@@ -249,7 +249,7 @@ const SKILL_PROMPTS = {
   date: "what's the date",
   play: 'play lo-fi beats',
   open: 'open youtube',
-  youtube: 'youtube stonic ai',
+  youtube: 'youtube seas ai',
   search: 'search weather today',
   calc: 'calculate 128 * 4',
   timer: 'set a timer 1 minute',
@@ -452,7 +452,7 @@ function syncWake() {
     stt.start({
       mode: 'wake',
       onResult: (text) => {
-        const m = text.toLowerCase().match(/\b(hey\s+)?(stonic|stonik|stonick)\b(.*)/);
+        const m = text.toLowerCase().match(/\b(hey\s+)?(seas|seez|seaz)\b(.*)/);
         if (!m) return;
         const rest = (m[3] || '').replace(/^[,.\s]+/, '').trim();
         if (rest.length > 2) {
@@ -536,7 +536,7 @@ function bindSettings() {
     $('#listenToggle').checked = state.wake;
     paintAware();
     syncWake();
-    addMsg('sys', state.wake ? 'Awerness armed — say “Hey Stonic”.' : 'Awerness paused.');
+    addMsg('sys', state.wake ? 'Awerness armed — say “Hey Seas”.' : 'Awerness paused.');
   });
 
   $('#rate').addEventListener('input', (e) => {
@@ -667,7 +667,7 @@ function paletteCommands() {
       },
     },
     {
-      label: state.wake ? 'Pause awerness' : 'Arm awerness — hey Stonic',
+      label: state.wake ? 'Pause awerness' : 'Arm awerness — hey Seas',
       hint: 'WAKE',
       run: () => $('#awernessSwitch').click(),
     },
@@ -771,7 +771,7 @@ $('#paletteInput').addEventListener('keydown', (e) => {
 /* ───────────────────── misc UI ───────────────────── */
 
 function bindWindowControls() {
-  const api = window.stonicDesktop?.win;
+  const api = window.seasDesktop?.win;
   if (!api) return;
   document.body.classList.add('is-desktop');
   const [min, max, close] = $$('.win-btns button');
@@ -993,7 +993,7 @@ function start() {
   }
 
   const greetName = listMemories().find((m) => m.text.startsWith('Name:'));
-  if (greetName) $('#orbLabel').textContent = 'STONIC';
+  if (greetName) $('#orbLabel').textContent = 'SEAS';
   $('#statusLine').textContent = `SYS · ${state.apiKey ? state.model : 'local core'}`;
   $('#netChip').classList.toggle('on', Boolean(state.apiKey));
   $('#netChip').querySelector('span').textContent = state.apiKey ? 'REMOTE ENGINE' : 'LOCAL BRAIN';
