@@ -1,7 +1,7 @@
-/* ════════════════════════════════════════════
+/* ══════════════════════════════════════════════
    skills.js — on-device skill matrix
    Everything here runs in the browser, no backend.
-   ════════════════════════════════════════════ */
+   ══════════════════════════════════════════════ */
 
 import { addMemory, searchMemories, listMemories, wipeMemories } from './memory.js';
 import { state } from './state.js';
@@ -150,7 +150,7 @@ export const SKILLS = [
     re: /\b(who are you|what are you|tum (kon|kaun) ho|kaun ho|your name|tumhara naam)\b/i,
     run: () => ({
       reply:
-        'I am Stonic — a local-first desktop intelligence: a character with a voice, a memory of you, and a small skill matrix. I run in this browser window; my memory never leaves this device.',
+        'I am Seas AI — a local-first desktop intelligence: a character with a voice, a memory of you, and a small skill matrix. I run in this browser window; my memory never leaves this device.',
     }),
   },
   {
@@ -205,7 +205,7 @@ export const SKILLS = [
       if (/^(my )?(files|documents|folder|desktop|downloads)$/i.test(target)) {
         return {
           reply:
-            'A browser cannot reach your file system — that needs the desktop build of Stonic. I can open a site or search for it instead.',
+            'A browser cannot reach your file system — that needs the desktop build of Seas AI. I can open a site or search for it instead.',
         };
       }
       const url = `https://www.google.com/search?q=${encodeURIComponent(target)}`;
