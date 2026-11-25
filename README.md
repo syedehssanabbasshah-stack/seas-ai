@@ -32,10 +32,27 @@ Pre-built installers are attached to every tagged GitHub release (**Releases** p
 | Windows 10/11 (x64) | `Seas-AI-<version>-Setup.exe` | Run it, choose the folder, finish. Desktop + Start-menu shortcuts are created. |
 | Linux (x64) | `Seas-AI-<version>-x86_64.AppImage` | `chmod +x Seas-AI-*.AppImage` then run it. |
 
-The Windows build is **not code-signed**. With Smart App Control (Windows 11) an unsigned app is
-blocked outright — there is no “Run anyway” and no per-app exception; only a code-signing
-certificate fixes it (or turning Smart App Control off, which cannot be turned back on without
-reinstalling Windows). On plain SmartScreen you can choose **More info → Run anyway**.
+### Windows 11: “Smart App Control blocked an app that may be unsafe”
+
+Smart App Control blocks the installer because it is **not code-signed**. There is no “Run anyway”
+and no per-app exception, so pick one of these:
+
+1. **Run it from source — works today, free.** `npm install` then `npm start` (see below).
+   Nothing unsigned is executed: Electron’s own `electron.exe` is Authenticode-signed by the
+   Electron project, and only our plain JS files load on top of it.
+2. **Turn Smart App Control off.** Settings → Privacy & security → Windows Security → App & browser
+   control → Smart App Control → **Off**. Microsoft documents that it cannot be switched back on
+   without reinstalling Windows, so treat this as permanent.
+3. **Sign the build — the only fix that keeps Smart App Control on.** The CI is already wired for
+   it: add `CSC_LINK` (base64 `.pfx`, or a link to it) and `CSC_KEY_PASSWORD` under
+   *Settings → Secrets and variables → Actions*, and the next tag signs both `Seas AI.exe` and the
+   installer with that certificate. Free certificate for public repos: **SignPath Foundation**
+   (requires an OSI-approved licence — this repo is currently `UNLICENSED`). Paid: **Azure
+   Artifact Signing**, ~$9.99/month, individuals only from the USA/Canada. A brand-new certificate
+   has no SmartScreen reputation yet, so early warnings are normal.
+
+With Smart App Control off, an unsigned installer only shows plain SmartScreen, where
+**More info → Run anyway** works.
 
 Build them yourself (electron-builder):
 
