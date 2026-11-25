@@ -21,7 +21,30 @@ jobs:
 
       - run: npm install --no-audit --no-fund
 
-      - run: npm run dist:win
+      # electron-builder signs Seas AI.exe and the NSIS installer automatically when
+      # CSC_LINK (base64 .pfx, or a URL to it) and CSC_KEY_PASSWORD are set as repo secrets.
+      # Without them the build still succeeds — it is just unsigned.
+      - name: Build installer
+        run: npm run dist:win
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+
+      - name: Report Authenticode status
+        shell: pwsh
+        run: |
+          $rows = @('| File | Status | Signer |', '| --- | --- | --- |')
+          $unsigned = $false
+          foreach ($exe in Get-ChildItem dist/*.exe) {
+            $sig = Get-AuthenticodeSignature $exe.FullName
+            if ($sig.Status -ne 'Valid') { $unsigned = $true }
+            $signer = if ($sig.SignerCertificate) { $sig.SignerCertificate.Subject } else { '(none)' }
+            $rows += "| $($exe.Name) | $($sig.Status) | $signer |"
+          }
+          $rows | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+          if ($unsigned) {
+            Add-Content $env:GITHUB_STEP_SUMMARY '**Unsigned installer** — Windows 11 Smart App Control will block it (see README).'
+          }
 
       - uses: actions/upload-artifact@v4
         with:
