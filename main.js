@@ -10,6 +10,7 @@ const { app, BrowserWindow, ipcMain, net, protocol, session, shell } = require('
 const path = require('node:path');
 const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
+const pcTools = require('./pc.js');
 
 const ROOT = __dirname;
 const ORIGIN = 'app://seas';
@@ -220,6 +221,19 @@ ipcMain.on('window:maximize', (event) => {
   else win.maximize();
 });
 ipcMain.on('window:close', (event) => windowFrom(event)?.close());
+
+/* ───────────────── desktop control ───────────────── */
+
+/* The renderer names a tool and passes plain arguments; pc.js owns the
+   allow-lists, so a prompt injection cannot turn into a shell command. */
+ipcMain.handle('pc:tool', async (_event, payload) => {
+  try {
+    const result = await pcTools.invoke(payload?.tool, payload?.args);
+    return { ok: true, result };
+  } catch (error) {
+    return { ok: false, error: error?.message || 'the desktop tool failed' };
+  }
+});
 
 /* ───────────────────── lifecycle ───────────────────── */
 
