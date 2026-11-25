@@ -18,6 +18,7 @@ import { AgentTown } from './agents.js';
 import { Globe } from './globe.js';
 import { createTelemetry } from './telemetry.js';
 import { localStt } from './local-stt.js?v=2';
+import { pcNews } from './desktop.js';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -43,7 +44,7 @@ function scrollChat() {
   el.scrollTop = el.scrollHeight;
 }
 
-function addMsg(role, text, { reveal = false } = {}) {
+function addMsg(role, text, { reveal = false, image = '', mime = 'image/jpeg' } = {}) {
   const wrapper = document.createElement('div');
   wrapper.className = `msg ${role}`;
 
@@ -63,6 +64,16 @@ function addMsg(role, text, { reveal = false } = {}) {
     typeOut(bubble, text);
   } else {
     bubble.textContent = text;
+  }
+
+  if (image) {
+    const shot = document.createElement('img');
+    shot.src = `data:${mime};base64,${image}`;
+    shot.alt = 'Screenshot captured from this screen';
+    shot.style.cssText =
+      'max-width:100%;border-radius:10px;display:block;margin-top:6px;border:1px solid rgba(53,240,255,.28)';
+    bubble.appendChild(shot);
+    scrollChat();
   }
   return wrapper;
 }
@@ -165,7 +176,7 @@ async function send(rawText) {
   typing.remove();
   setOrb('idle');
 
-  addMsg('ai', result.reply, { reveal: true });
+  addMsg('ai', result.reply, { reveal: !result.image, image: result.image, mime: result.mime });
   state.history.push({ role: 'assistant', text: result.reply });
   saveState();
 
@@ -786,6 +797,30 @@ function autosize(el) {
   el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
 }
 
+/* ───────────────────── live headlines ───────────────────── */
+
+async function loadHeadlines() {
+  let items = [];
+  try {
+    items = await pcNews(3);
+  } catch {
+    return;
+  }
+  if (!items.length) return;
+  const cards = $$('#worldCards .wcard');
+  items.slice(0, 3).forEach((item, i) => {
+    const card = cards[i];
+    if (!card) return;
+    card.dataset.prompt = `Tell me more about this news: ${item.title}`;
+    const head = card.querySelector('.wcard-head b');
+    if (head) head.textContent = item.title.length > 78 ? `${item.title.slice(0, 78)}…` : item.title;
+    const body = card.querySelector('.wcard-body p');
+    if (body) body.textContent = `${item.source} · live headline. Tap to talk it through.`;
+  });
+  const date = $('#worldDate');
+  if (date) date.textContent = `${date.textContent} · live`;
+}
+
 function tickClock() {
   const now = new Date();
   const worldDate = $('#worldDate');
@@ -976,6 +1011,9 @@ function start() {
   };
 
   bindWindowControls();
+  const refreshBtn = $('#worldRefresh') || $('.panel.world .ph-actions button[title="Refresh"]');
+  refreshBtn?.addEventListener('click', loadHeadlines);
+  if (window.seasDesktop?.pc) loadHeadlines();
   bindComposer();
   bindSettings();
   initMic();
