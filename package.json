@@ -1,11 +1,11 @@
 {
-  "name": "stonic-ai-desktop",
-  "productName": "Stonic AI",
-  "version": "3.1.22",
-  "description": "Stonic AI — desktop personal assistant shell (Electron wrapper)",
-  "author": "Stonic AI",
+  "name": "seas-ai-desktop",
+  "productName": "Seas AI",
+  "version": "3.1.23",
+  "description": "Seas AI — desktop personal assistant shell (Electron wrapper)",
+  "author": "Seas AI",
   "main": "main.js",
-  "desktopName": "com.stonic.ai.desktop",
+  "desktopName": "com.seas.ai.desktop",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -21,9 +21,9 @@
     "electron-builder": "^26.18.0"
   },
   "build": {
-    "appId": "com.stonic.ai",
-    "productName": "Stonic AI",
-    "copyright": "Copyright © 2026 Stonic AI",
+    "appId": "com.seas.ai",
+    "productName": "Seas AI",
+    "copyright": "Copyright © 2026 Seas AI",
     "asar": false,
     "directories": {
       "output": "dist",
@@ -45,7 +45,7 @@
           ]
         }
       ],
-      "artifactName": "Stonic-AI-${version}-Setup.${ext}"
+      "artifactName": "Seas-AI-${version}-Setup.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -54,9 +54,9 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Stonic AI",
+      "shortcutName": "Seas AI",
       "runAfterFinish": true,
-      "uninstallDisplayName": "Stonic AI ${version}"
+      "uninstallDisplayName": "Seas AI ${version}"
     },
     "linux": {
       "target": [
@@ -70,15 +70,15 @@
       "syncDesktopName": true,
       "category": "Utility",
       "synopsis": "Sci-fi AI desktop assistant",
-      "description": "Stonic AI — voice-driven sci-fi desktop assistant shell.",
+      "description": "Seas AI — voice-driven sci-fi desktop assistant shell.",
       "desktop": {
         "entry": {
-          "Name": "Stonic AI",
+          "Name": "Seas AI",
           "Comment": "Sci-fi AI desktop assistant",
           "Categories": "Utility;"
         }
       },
-      "artifactName": "Stonic-AI-${version}-${arch}.${ext}"
+      "artifactName": "Seas-AI-${version}-${arch}.${ext}"
     }
   }
 }
