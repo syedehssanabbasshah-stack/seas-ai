@@ -13,6 +13,10 @@ contextBridge.exposeInMainWorld('seasDesktop', {
     electron: process.versions.electron,
     chrome: process.versions.chrome,
   },
+  /* Desktop control: one named tool per call, never a shell string. */
+  pc: {
+    run: (tool, args) => ipcRenderer.invoke('pc:tool', { tool, args }),
+  },
   win: {
     minimize: () => ipcRenderer.send('window:minimize'),
     maximize: () => ipcRenderer.send('window:maximize'),
