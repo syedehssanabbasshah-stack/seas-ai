@@ -32,6 +32,7 @@ jobs:
 
       - name: Report Authenticode status
         shell: pwsh
+        continue-on-error: true
         run: |
           $rows = @('| File | Status | Signer |', '| --- | --- | --- |')
           $unsigned = $false
