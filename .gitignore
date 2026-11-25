@@ -1,0 +1,10 @@
+node_modules/
+dist/
+out/
+.DS_Store
+npm-debug.log*
+
+# release binaries are too big for GitHub (>100 MB) — build with `npm run dist`
+artifacts/*.AppImage
+artifacts/*.exe
+artifacts/*.zip
