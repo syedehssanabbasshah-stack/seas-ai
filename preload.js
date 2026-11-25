@@ -1,12 +1,12 @@
 /* ══════════════════════════════════════════════
-   Stonic AI — preload bridge
+   Seas AI — preload bridge
    The renderer keeps zero Node access; it only
    gets the window controls it needs.
    ══════════════════════════════════════════════ */
 
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('stonicDesktop', {
+contextBridge.exposeInMainWorld('seasDesktop', {
   isDesktop: true,
   platform: process.platform,
   versions: {
