@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#05070a" />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<title>Stonic AI — Desktop Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="assets/css/style.css?v=12" />
+</head>
+<body>
+
+<div class="app" id="app">
+  <canvas id="starfield" class="starfield"></canvas>
+
+  <!-- ───────────────────────── TOP BAR ───────────────────────── -->
+  <header class="topbar">
+    <div class="tb-left">
+      <div class="brand">
+        <i class="brand-mark" aria-hidden="true"></i>
+        <b>Stonic AI</b>
+        <span class="ver">v3.1.22</span>
+      </div>
+      <nav class="tb-menu" aria-label="Application menu">
+        <button type="button">
+          <svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.7A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8Z"/></svg>
+          Feedback
+        </button>
+        <button type="button">
+          <svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/></svg>
+          Manage Billing
+        </button>
+        <button type="button">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.6"/><path d="m5.6 5.6 3.9 3.9m5 5 3.9 3.9m0-12.8-3.9 3.9m-5 5-3.9 3.9"/></svg>
+          Support
+        </button>
+        <button type="button" id="exploreBtn" title="Command console · Ctrl K">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5Z"/></svg>
+          Explore
+        </button>
+      </nav>
+    </div>
+
+    <div class="tb-right">
+      <button type="button" class="float-pill">
+        <svg viewBox="0 0 24 24"><rect x="3" y="6" width="12" height="9" rx="2"/><path d="M17 9h4v9H9v-3"/></svg>
+        Floating
+      </button>
+      <div class="awerness">
+        <span>Awerness</span>
+        <button type="button" class="switch is-on" id="awernessSwitch" aria-pressed="true" title="Wake word listening"><b></b><em></em></button>
+      </div>
+      <div class="avatar">ST</div>
+      <div class="win-btns">
+        <button type="button" title="Minimize" aria-label="Minimize"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <button type="button" title="Maximize" aria-label="Maximize"><svg viewBox="0 0 24 24"><rect x="5.5" y="5.5" width="13" height="13" rx="2"/></svg></button>
+        <button type="button" title="Close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ───────────────────────── SHELL ───────────────────────── -->
+  <main class="shell">
+
+    <!-- ── YOUR WORLD ── -->
+    <aside class="panel world">
+      <header class="ph">
+        <div class="ph-title">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18"/></svg>
+          YOUR WORLD
+        </div>
+        <div class="ph-actions">
+          <button type="button" title="Refresh" aria-label="Refresh">
+            <svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.6 6M20 5v6h-6"/></svg>
+          </button>
+          <button type="button" title="Expand" aria-label="Expand">
+            <svg viewBox="0 0 24 24"><path d="M9 4H4v5m11-5h5v5M9 20H4v-5m11 5h5v-5"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="globe-wrap">
+        <canvas id="globe"></canvas>
+      </div>
+
+      <div class="feed">
+        <p class="feed-date" id="worldDate">Sunday, 15 November</p>
+        <h2>Three things for you today</h2>
+        <p class="feed-sub">Picked from your memories, found on the web today.</p>
+
+        <div class="cards" id="worldCards">
+          <article class="wcard is-collapsed" data-prompt="Tell me about Pakistan IT exports">
+            <button type="button" class="wcard-head">
+              <b>Pakistan IT exports</b>
+              <span class="wcard-arrow" aria-hidden="true">↗</span>
+            </button>
+            <div class="wcard-body">
+              <p>Pakistan ki services exports 22.6% barh kar $2.72 billion ho gayi hai Jul–Sep 2026. IT aur telecom exports mein 8.45% izafa hua. In short: hardware bechne ke liye market aur software bechne ke liye skills chahiye — dono taraf barh rahe hain.</p>
+            </div>
+          </article>
+
+          <article class="wcard" data-prompt="Why are AI software margins under pressure?">
+            <button type="button" class="wcard-head">
+              <b>AI software margins</b>
+              <span class="wcard-arrow" aria-hidden="true">↗</span>
+            </button>
+            <div class="wcard-body">
+              <p>KeyBanc: AI software report. AI se bechne wali companies kez barhti hain, lekin profit kam hai aur token costs zyada. Pricing aur margin pe nazar rakhein.</p>
+            </div>
+          </article>
+
+          <article class="wcard" data-prompt="Tell me about Godzilla Minus Zero">
+            <button type="button" class="wcard-head">
+              <b>Godzilla Minus Zero</b>
+              <span class="wcard-arrow" aria-hidden="true">↗</span>
+            </button>
+            <div class="wcard-body">
+              <p>Godzilla Minus Zero North America mein 6 November ko release hua. Godzilla Minus One ka sequel hai. Chhoti budget, bada impact. Practical: agar aapko pasand hai to dekhein.</p>
+            </div>
+          </article>
+        </div>
+
+        <p class="feed-tap">Tap one to talk about it</p>
+      </div>
+    </aside>
+
+    <!-- ── CORE ── -->
+    <section class="core">
+
+      <div class="core-row">
+        <svg class="wires" id="wires" aria-hidden="true"></svg>
+
+        <div class="nodes" id="nodes">
+          <button type="button" class="node n-memory" data-view="memory">
+            <span class="node-ic">
+              <svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M10 3v4m4-4v4M10 17v4m4-4v4M3 10h4m-4 4h4m10-4h4m-4 4h4"/></svg>
+            </span>
+            <b>MEMORY</b>
+            <i class="node-port"></i>
+          </button>
+
+          <button type="button" class="node n-skills" data-view="skills">
+            <span class="node-ic">
+              <svg viewBox="0 0 24 24"><path d="m12 3 2.4 5.2L20 9.6l-4 4 1 5.6-5-2.8-5 2.8 1-5.6-4-4 5.6-1.4Z"/></svg>
+            </span>
+            <b>SKILLS</b>
+            <i class="node-port"></i>
+          </button>
+
+          <button type="button" class="node n-character" data-view="agents">
+            <span class="node-ic">
+              <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.7-7 9-7 9Z"/></svg>
+            </span>
+            <b>CHARACTER</b>
+            <i class="node-port"></i>
+          </button>
+
+          <button type="button" class="node n-setting" data-view="settings">
+            <span class="node-ic">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.4M12 18.6V21M4.2 7.5l2 1.2m11.6 6.6 2 1.2M4.2 16.5l2-1.2m11.6-6.6 2-1.2"/></svg>
+            </span>
+            <b>SETTING</b>
+            <i class="node-port"></i>
+          </button>
+        </div>
+
+        <div class="orb-panel">
+          <canvas id="orb"></canvas>
+          <div class="orb-fade"></div>
+          <div class="channel" id="channel">
+            <span class="ch-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span id="caption">Opening the voice channel…</span>
+            <button type="button" id="channelX" aria-label="Close">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VISUAL HUB ── -->
+      <div class="panel hub">
+        <header class="ph">
+          <div class="ph-title">
+            <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8.2"/></svg>
+            VISUAL HUB
+          </div>
+          <div class="hub-right">
+            <span class="ready">Ready</span>
+            <div class="hub-tabs">
+              <button type="button" class="is-active">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
+                Visual Hub
+              </button>
+              <button type="button">
+                <svg viewBox="0 0 24 24"><path d="M8 12V6a2 2 0 0 1 4 0v6m0 0V5a2 2 0 0 1 4 0v9m0-2a2 2 0 0 1 4 0v3a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6v-3a2 2 0 0 1 4 0"/></svg>
+                Gesture
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div class="hub-body">
+          <div class="blueprint">
+            <svg viewBox="0 0 340 240" fill="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="bpFace" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#63e8ff" stop-opacity=".28"/>
+                  <stop offset="1" stop-color="#1a6f96" stop-opacity=".04"/>
+                </linearGradient>
+                <radialGradient id="bpGlow" cx=".5" cy=".5" r=".5">
+                  <stop offset="0" stop-color="#54e6ff" stop-opacity=".5"/>
+                  <stop offset="1" stop-color="#54e6ff" stop-opacity="0"/>
+                </radialGradient>
+                <filter id="bpBlur" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="1.6" result="b"/>
+                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+
+              <ellipse cx="170" cy="132" rx="140" ry="72" fill="url(#bpGlow)" opacity=".5"/>
+
+              <!-- bottom plane -->
+              <g filter="url(#bpBlur)">
+                <polygon points="170,182 306,214 170,246 34,214" fill="url(#bpFace)" stroke="#4ee0ff" stroke-opacity=".55"/>
+                <g stroke="#4ee0ff" stroke-opacity=".18">
+                  <path d="M58 196 294 232M82 190 306 222M112 186 316 214"/>
+                  <path d="M262 196 26 232M238 190 14 222M208 186 4 214"/>
+                  <path d="M148 190 148 240M124 196 124 240M196 196 196 240M220 190 220 238"/>
+                </g>
+              </g>
+
+              <!-- stacked plate -->
+              <g filter="url(#bpBlur)">
+                <polygon points="170,132 290,168 170,204 50,168" fill="url(#bpFace)" stroke="#63e8ff" stroke-opacity=".7"/>
+                <g stroke="#63e8ff" stroke-opacity=".16">
+                  <path d="M86 150 254 196M122 140 290 186M146 136 296 180"/>
+                  <path d="M254 150 86 196M218 140 50 186M194 136 44 180"/>
+                </g>
+                <!-- extruded towers -->
+                <g stroke="#7ff0ff" stroke-opacity=".8">
+                  <polygon points="118,150 138,156 118,162 98,156" fill="#2bb6d8" fill-opacity=".35"/>
+                  <polygon points="98,156 118,162 118,142 98,136" fill="#1b8db0" fill-opacity=".45"/>
+                  <polygon points="138,156 118,162 118,142 138,136" fill="#0f5f7c" fill-opacity=".5"/>
+
+                  <polygon points="158,144 178,150 158,156 138,150" fill="#2bb6d8" fill-opacity=".35"/>
+                  <polygon points="138,150 158,156 158,128 138,122" fill="#1b8db0" fill-opacity=".45"/>
+                  <polygon points="178,150 158,156 158,128 178,122" fill="#0f5f7c" fill-opacity=".5"/>
+
+                  <polygon points="198,154 218,160 198,166 178,160" fill="#2bb6d8" fill-opacity=".35"/>
+                  <polygon points="178,160 198,166 198,134 178,128" fill="#1b8db0" fill-opacity=".45"/>
+                  <polygon points="218,160 198,166 198,134 218,128" fill="#0f5f7c" fill-opacity=".5"/>
+                </g>
+              </g>
+
+              <!-- top thin plate -->
+              <g filter="url(#bpBlur)">
+                <polygon points="170,74 258,100 170,126 82,100" fill="url(#bpFace)" stroke="#7ff0ff" stroke-opacity=".55" stroke-dasharray="3 4"/>
+                <path d="M170 74v52M82 100l176 0" stroke="#7ff0ff" stroke-opacity=".22"/>
+              </g>
+
+              <!-- vertical guides -->
+              <g stroke="#4ee0ff" stroke-opacity=".25" stroke-dasharray="2 5">
+                <path d="M170 18v56M170 126v6M170 204v-2"/>
+                <path d="M46 82v140M294 82v140"/>
+              </g>
+
+              <!-- sparkles -->
+              <g fill="#8ff6ff" opacity=".85">
+                <path d="M64 128h10M69 123v10" stroke="#8ff6ff" stroke-width="1.2"/>
+                <path d="M276 132h10M281 127v10" stroke="#8ff6ff" stroke-width="1.2"/>
+                <circle cx="170" cy="20" r="1.6"/>
+                <circle cx="292" cy="96" r="1.2"/>
+                <circle cx="46" cy="208" r="1.2"/>
+                <circle cx="120" cy="222" r="1"/>
+                <circle cx="238" cy="226" r="1"/>
+              </g>
+            </svg>
+          </div>
+
+          <div class="hub-copy">
+            <h2>What do you want to see?</h2>
+            <p>Ask out loud. Stonic draws it here as it explains.</p>
+            <ol class="hub-list">
+              <li><button type="button" data-prompt="Draw a SpaceX Starship blueprint"><i>01</i><span>Draw a SpaceX Starship blueprint</span></button></li>
+              <li><button type="button" data-prompt="Show how a black hole bends light"><i>02</i><span>Show how a black hole bends light</span></button></li>
+              <li><button type="button" data-prompt="Look inside a fusion reactor"><i>03</i><span>Look inside a fusion reactor</span></button></li>
+              <li><button type="button" data-prompt="Plan a crewed mission to Mars"><i>04</i><span>Plan a crewed mission to Mars</span></button></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── VOICE / NOTES ── -->
+    <aside class="panel voice" id="voicePanel">
+      <header class="ph voice-head">
+        <div class="tabs">
+          <button type="button" class="tab is-active" data-tab="voice">VOICE</button>
+          <button type="button" class="tab" data-tab="notes">NOTES</button>
+        </div>
+        <div class="ph-actions">
+          <button type="button" title="New" aria-label="New">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <button type="button" title="Collapse" aria-label="Collapse">
+            <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <button type="button" title="Expand" aria-label="Expand">
+            <svg viewBox="0 0 24 24"><path d="M9 4H4v5m11-5h5v5M9 20H4v-5m11 5h5v-5"/></svg>
+          </button>
+          <button type="button" title="Layout" aria-label="Layout">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="voice-body" id="voiceBody">
+        <div class="ready-hero" id="readyHero">
+          <div class="mic-tile">
+            <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3Z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          </div>
+          <h3>SYSTEM READY</h3>
+          <p>Aapka personal AI assistant.<br />Bataye main kaise madad kar sakta hoon?</p>
+        </div>
+
+        <section class="view is-active" data-view="chat">
+          <div class="chat" id="chat" aria-live="polite"></div>
+        </section>
+
+        <section class="view" data-view="memory">
+          <div class="view-head">
+            <h2>NOTES</h2>
+            <button type="button" class="ghost-btn" id="wipeMemory">wipe</button>
+          </div>
+          <p class="view-note">Say “remember that …” and it lands here. Everything stays on this device.</p>
+          <form class="inline-form" id="memoryForm">
+            <input id="memoryInput" placeholder="Add a note…" autocomplete="off" />
+            <button type="submit">STORE</button>
+          </form>
+          <ul class="memory-list" id="memoryList"></ul>
+        </section>
+      </div>
+
+      <form class="composer" id="composer">
+        <button type="button" class="composer-ic" id="micBtn" title="Speak">
+          <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3Z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        </button>
+        <textarea id="input" rows="1" placeholder="Type to Stonic Voice…" autocomplete="off"></textarea>
+        <button type="button" class="composer-ic" title="Attach" aria-label="Attach">
+          <svg viewBox="0 0 24 24"><path d="M20 11.5 12.4 19a4.6 4.6 0 0 1-6.5-6.5l7.8-7.8a3.1 3.1 0 1 1 4.4 4.4l-7.8 7.8a1.6 1.6 0 0 1-2.2-2.2l7-7"/></svg>
+        </button>
+        <button type="submit" class="send-btn" title="Send" aria-label="Send">
+          <svg viewBox="0 0 24 24"><path d="M12 19V5m0 0-6 6m6-6 6 6"/></svg>
+        </button>
+      </form>
+    </aside>
+  </main>
+
+  <!-- ───────────────────────── DRAWER ───────────────────────── -->
+  <div class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-scrim" data-close></div>
+    <div class="drawer-card">
+      <header class="ph">
+        <div class="ph-title" id="drawerTitle">SKILLS</div>
+        <button type="button" class="ph-x" data-close aria-label="Close">✕</button>
+      </header>
+      <div class="drawer-body">
+        <section class="view" data-view="skills">
+          <h3 class="sub-head">SKILL MATRIX</h3>
+          <p class="view-note">Each module runs on this device — no server required.</p>
+          <div class="skill-grid" id="skillGrid"></div>
+          <h3 class="sub-head">TODAY</h3>
+          <ul class="todo-list" id="todoList"></ul>
+        </section>
+
+        <section class="view" data-view="agents">
+          <div class="view-head">
+            <h3 class="sub-head">AGENT TOWN</h3>
+            <button type="button" class="ghost-btn" id="deployTeam">deploy</button>
+          </div>
+          <p class="view-note">Four local agents walk the grid, take a task and report back.</p>
+          <div class="town" id="town">
+            <div class="town-grid"></div>
+            <div class="town-agents" id="townAgents"></div>
+          </div>
+          <form class="inline-form" id="taskForm">
+            <input id="taskInput" placeholder="Assign a task to the town…" autocomplete="off" />
+            <button type="submit">ASSIGN</button>
+          </form>
+          <ul class="town-log" id="townLog"></ul>
+        </section>
+
+        <section class="view" data-view="settings">
+          <h3 class="sub-head">VOICE</h3>
+          <div class="field">
+            <label>Voice</label>
+            <div class="seg" id="genderSeg">
+              <button type="button" data-gender="male">MALE</button>
+              <button type="button" data-gender="female">FEMALE</button>
+            </div>
+            <p class="view-note tiny" id="voiceInfo"></p>
+          </div>
+
+          <div class="field-row">
+            <label class="switch-row">
+              <input type="checkbox" id="speakToggle" checked />
+              <i></i><span>Speak replies</span>
+            </label>
+            <label class="switch-row">
+              <input type="checkbox" id="listenToggle" />
+              <i></i><span>Wake word</span>
+            </label>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="rate">Rate <b id="rateVal">1.0</b></label>
+              <input type="range" id="rate" min="0.6" max="1.6" step="0.05" value="1" />
+            </div>
+            <div class="field">
+              <label for="pitch">Pitch <b id="pitchVal">1.0</b></label>
+              <input type="range" id="pitch" min="0.4" max="1.6" step="0.05" value="1" />
+            </div>
+          </div>
+
+          <h3 class="sub-head">AI ENGINE</h3>
+          <p class="view-note">Without a key Stonic uses its built-in local brain. Add any OpenAI-compatible endpoint to unlock full conversation.</p>
+
+          <div class="field">
+            <label for="baseUrl">Endpoint</label>
+            <input id="baseUrl" value="https://api.openai.com/v1" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label for="model">Model</label>
+            <input id="model" value="gpt-4o-mini" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label for="apiKey">API key</label>
+            <input id="apiKey" type="password" placeholder="sk-… (stored on this device only)" spellcheck="false" />
+          </div>
+          <div class="field-row">
+            <button type="button" class="solid-btn" id="saveSettings">SAVE</button>
+            <button type="button" class="ghost-btn" id="resetSettings">reset engine</button>
+          </div>
+          <p class="view-note tiny" id="engineState"></p>
+
+          <h3 class="sub-head">PREMIUM VOICE</h3>
+          <p class="view-note">ElevenLabs key add karein to Stonic studio voice mein bolta hai. Key na ho to system voice chalti rehti hai.</p>
+          <div class="field">
+            <label for="elevenKey">ElevenLabs API key</label>
+            <input id="elevenKey" type="password" placeholder="xi-… (device pe hi rehti hai)" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label for="elevenVoice">Voice ID <b>optional</b></label>
+            <input id="elevenVoice" placeholder="default · male Adam / female Rachel" spellcheck="false" />
+          </div>
+
+          <h3 class="sub-head">SYSTEM DIAGNOSTICS</h3>
+          <div class="diag" id="diag">
+            <div class="diag-row" data-k="load"><span>UI LOAD</span><i class="meter"><b></b></i><strong>—</strong></div>
+            <div class="diag-row" data-k="mem"><span>MEMORY</span><i class="meter"><b></b></i><strong>—</strong></div>
+            <div class="diag-row" data-k="net"><span>NETWORK</span><i class="meter"><b></b></i><strong>—</strong></div>
+            <div class="diag-row" data-k="fps"><span>FRAME RATE</span><i class="meter"><b></b></i><strong>—</strong></div>
+          </div>
+          <p class="view-note tiny" id="diagNote">Measured in this window · updates every second.</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── COMMAND CONSOLE ───────────────────── -->
+  <div class="palette" id="palette" aria-hidden="true">
+    <div class="palette-scrim" data-palette-close></div>
+    <div class="palette-card" role="dialog" aria-modal="true" aria-label="Command console">
+      <div class="palette-head">
+        <svg viewBox="0 0 24 24"><path d="m9 6-6 6 6 6M15 6l6 6-6 6"/></svg>
+        <input id="paletteInput" placeholder="Run a command…" autocomplete="off" spellcheck="false" />
+        <kbd>esc</kbd>
+      </div>
+      <ul class="palette-list" id="paletteList"></ul>
+      <div class="palette-foot"><span>↑ ↓ move</span><span>↵ run</span><span>esc close</span></div>
+    </div>
+  </div>
+
+  <!-- state chips kept out of the layout -->
+  <div class="hidden-ui">
+    <div class="chip" id="coreChip"><b></b><span>CORE ONLINE</span></div>
+    <div class="chip" id="micChip"><b></b><span>MIC IDLE</span></div>
+    <div class="chip" id="netChip"><b></b><span>LOCAL BRAIN</span></div>
+    <span id="orbState">IDLE</span>
+    <span id="orbLabel">STONIC</span>
+    <span id="statusLine">SYS · Ready</span>
+    <span id="latency">— ms</span>
+    <canvas id="wave" width="900" height="48"></canvas>
+    <button type="button" id="clearChat">clear</button>
+  </div>
+</div>
+
+<script type="module" src="assets/js/app.js?v=14"></script>
+</body>
+</html>
