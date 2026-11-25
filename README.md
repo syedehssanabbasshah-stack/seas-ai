@@ -129,6 +129,42 @@ Node integration and a sandboxed preload, and a second launch focuses the existi
 Packaging is wired up with `electron-builder` (see **Installers** above); the app ships as an
 NSIS `.exe` installer on Windows and an `.AppImage` on Linux.
 
+## Desktop control (PC app)
+
+In the Electron build the assistant can actually act on the machine. Every action is a named
+tool that runs in the main process — the window never passes a shell string, app names are
+allow-listed, and file operations are confined to `Desktop`, `Documents`, `Downloads`, `Music`,
+`Videos`, `Pictures` and `Seas_Files`.
+
+Try saying:
+
+```
+open notepad                    close chrome
+volume 40                       volume up · mute · next track
+pause                           take a screenshot
+find my CV file                 search documents for invoice
+create folder invoices          create file notes
+read notes.txt                  type hello world
+copy · paste · save · undo      minimize all · show desktop · switch window
+new desktop · next desktop      show a message: lunch at 2
+lock the pc                     sleep · restart · shutdown · cancel shutdown
+research best laptops under 100k
+what's in the news
+```
+
+What each platform gets:
+
+| Area | Windows | macOS | Linux |
+| --- | --- | --- | --- |
+| Screenshots | yes | yes | — (needs a desktop session capture tool) |
+| Open / close apps, files, folders | yes | yes | yes |
+| Volume, media keys, typing, shortcuts, windows, virtual desktops, power | yes | — | — |
+| File search, doc search, create folder/file, Recycle Bin | yes | yes (delete is permanent) | yes (delete is permanent) |
+
+Screenshots are captured as JPEG, shown in the chat transcript, and the temp file is deleted
+immediately. Shutdown and restart always run with a 30-second delay, so “cancel shutdown” still
+works.
+
 ## What it does
 
 | Area | Details |
@@ -137,7 +173,9 @@ NSIS `.exe` installer on Windows and an `.AppImage` on Linux.
 | **Conversation** | Chat with typewriter output, transcript restored from local storage. |
 | **Voice** | Speech recognition (mic button or `Ctrl/⌘ + M`) with an on-device Whisper fallback, optional wake word ("hey seas"), speech synthesis with a single **Male / Female** switch (SYSTEM → VOICE). |
 | **Memory** | Facts live in `localStorage`. "remember that …", "my name is …" and similar sentences are captured automatically. |
-| **Skills** | 20 on-device modules: open sites, YouTube, web search, maths, timers, notes/to-dos, device report, weather, WhatsApp draft, coin/dice, memory, session control. |
+| **Skills** | 20 on-device modules: open sites, YouTube, web search, maths, timers, notes/to-dos, device report, weather, WhatsApp draft, coin/dice, memory, session control — plus the desktop set below. |
+| **PC control** | Desktop build only: open and close apps, volume and media keys, screenshots in the transcript, file search and text search, create folders and files, type into the active app, shortcuts, window and virtual-desktop control, message boxes, Recycle Bin, lock / sleep / hibernate / restart / shut down. |
+| **Research** | Desktop build only: real search results with snippets plus a read of the top page, and live headlines in the WORLD panel. |
 | **Agent Town** | Four local seats (Researcher, Builder, Analyst, Critic) walk a grid, take a task and report back. A simulation of a multi-agent office, entirely client-side. |
 | **System** | Male / Female voice, engine endpoint, model, API key (all stored on this device only). |
 
@@ -158,15 +196,17 @@ The key is stored in this browser's `localStorage` and sent only to the endpoint
 Some providers block cross-origin browser requests (CORS); if you see
 "Engine unreachable", use a provider that allows CORS or proxy the call through your own server.
 
-> Note: this build runs in a browser sandbox. It can open sites, play media in a new tab and
-> remember things — it cannot launch installed apps, read your disk, or control the OS.
-> For that you need a native desktop build.
+> Note: the browser build is sandboxed. It can open sites, play media in a new tab and remember
+> things — it cannot launch installed apps, read your disk, or control the OS. Those skills wake
+> up only in the desktop build (`npm start`), where the PC bridge below is available.
 
 ## Files
 
 ```
-main.js                 Electron main process (app:// scheme, window, permissions)
-preload.js              contextBridge window-control API
+main.js                 Electron main process (app:// scheme, window, permissions, pc IPC)
+pc.js                   desktop control toolkit: apps, sound, files, screenshots, power, research
+preload.js              contextBridge window-control + PC-control API
+assets/js/desktop.js    renderer bridge to the PC layer (browser-safe fallback)
 package.json            Electron scripts, electron-builder config, dev dependencies
 build/icon.png          optional app icon — not committed here; add it and re-enable the
                         win.icon / linux.icon fields to make installers use it
@@ -176,7 +216,7 @@ assets/css/style.css    design system, layout, animation
 assets/js/state.js      settings + personality + persistence
 assets/js/memory.js     local memory store, matching, fact extraction
 assets/js/voice.js      speech synthesis + speech recognition wrappers
-assets/js/skills.js     skill matrix (sites, search, maths, timers, notes, device…)
+assets/js/skills.js     skill matrix (sites, search, maths, timers, notes, device, desktop…)
 assets/js/brain.js      skill dispatch → remote engine → local core fallback
 assets/js/character.js  canvas orb, starfield, waveform
 assets/js/agents.js     Agent Town simulation
@@ -186,4 +226,5 @@ assets/js/app.js        boot, chat pipeline, views, settings wiring
 ## Privacy
 
 Memory, transcript, to-dos and settings stay in `localStorage` on this device.
-The only outbound request is the optional AI engine call, when you configure one.
+The only outbound request is the optional AI engine call, when you configure one. In the desktop
+build, research and headlines fetch public web pages / RSS feeds from the main process.
