@@ -1,0 +1,6 @@
+# Cloudflare Pages project for the Seas AI web build.
+# Build command: npm run web:build   ·   Output directory: dist-web
+# CLI deploy:    npm run web:deploy
+name = "seas-ai"
+pages_build_output_dir = "dist-web"
+compatibility_date = "2026-01-01"

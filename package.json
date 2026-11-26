@@ -14,7 +14,10 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder --publish never",
     "dist:win": "electron-builder --win nsis --publish never",
-    "dist:linux": "electron-builder --linux AppImage --publish never"
+    "dist:linux": "electron-builder --linux AppImage --publish never",
+    "web:build": "node scripts/web-build.mjs",
+    "web:preview": "python3 -m http.server 3002 --directory dist-web --bind 0.0.0.0",
+    "web:deploy": "wrangler pages deploy dist-web --project-name seas-ai"
   },
   "devDependencies": {
     "electron": "^45.4.1",
@@ -34,6 +37,7 @@
       "main.js",
       "pc.js",
       "preload.js",
+      "cloud.json",
       "assets/**/*",
       "package.json"
     ],

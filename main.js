@@ -15,6 +15,54 @@ const pcTools = require('./pc.js');
 const ROOT = __dirname;
 const ORIGIN = 'app://seas';
 const DEV = process.argv.includes('--dev');
+const LOCAL_ENTRY = `${ORIGIN}/index.html`;
+
+/* ───────────── where the UI comes from ─────────────
+   cloud.json can point the shell at the Cloudflare Pages build: every change
+   published there then shows up in the desktop app too. With no url (or with
+   --local) the bundled files are used, so the app still opens offline. */
+
+function readCloudConfig() {
+  const config = { url: '', clearCache: true };
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(ROOT, 'cloud.json'), 'utf8'));
+    if (typeof raw.url === 'string') config.url = raw.url.trim();
+    if (raw.clearCache === false) config.clearCache = false;
+  } catch {
+    /* no cloud.json → bundled shell */
+  }
+  if (process.env.SEAS_CLOUD_URL) config.url = process.env.SEAS_CLOUD_URL.trim();
+  return config;
+}
+
+const CLOUD = process.argv.includes('--local') ? { url: '', clearCache: true } : readCloudConfig();
+
+const CLOUD_ENTRY = (() => {
+  if (!CLOUD.url) return '';
+  try {
+    const url = new URL(CLOUD.url);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return '';
+    return url.toString();
+  } catch {
+    console.error(`[seas] cloud.json url is not a valid URL: ${CLOUD.url}`);
+    return '';
+  }
+})();
+
+const CLOUD_ORIGIN = CLOUD_ENTRY ? new URL(CLOUD_ENTRY).origin : '';
+const TRUSTED_ORIGINS = new Set([CLOUD_ORIGIN].filter(Boolean));
+
+/* The bundled shell (app://seas) and the configured cloud build are the only
+   pages allowed to keep the window controls and the desktop toolkit. */
+function isTrustedShellUrl(url) {
+  if (!url) return false;
+  if (url.startsWith(`${ORIGIN}/`) || url === ORIGIN) return true;
+  try {
+    return TRUSTED_ORIGINS.has(new URL(url).origin);
+  } catch {
+    return false;
+  }
+}
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -135,6 +183,25 @@ async function serveFile(request) {
   });
 }
 
+/* ───────────────────── shell loader ───────────────────── */
+
+/* Cloud first (so a Cloudflare deploy is what the app shows), bundled files as
+   the fallback. The cache is cleared in cloud mode so a fresh deploy is never
+   hidden behind a stale module. */
+async function loadShell(win) {
+  if (CLOUD_ENTRY) {
+    try {
+      if (CLOUD.clearCache) await session.defaultSession.clearCache();
+      await win.loadURL(CLOUD_ENTRY);
+      console.log(`[seas] UI loaded from cloud: ${CLOUD_ENTRY}`);
+      return;
+    } catch (error) {
+      console.error(`[seas] cloud UI unreachable, using bundled files: ${error?.message || error}`);
+    }
+  }
+  await win.loadURL(LOCAL_ENTRY);
+}
+
 /* ───────────────────── permissions ───────────────────── */
 
 function hardenSession() {
@@ -150,7 +217,11 @@ function hardenSession() {
     callback(allowed.has(permission));
   });
 
-  ses.setPermissionCheckHandler((webContents, permission) => allowed.has(permission));
+  ses.setPermissionCheckHandler((webContents, permission) => {
+    if (!allowed.has(permission)) return false;
+    const url = webContents?.getURL?.() || '';
+    return !url || isTrustedShellUrl(url);
+  });
 }
 
 /* ───────────────────── window ───────────────────── */
@@ -197,12 +268,12 @@ function createWindow() {
   });
 
   mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (url.startsWith(ORIGIN)) return;
+    if (isTrustedShellUrl(url)) return;
     event.preventDefault();
     if (/^https?:/i.test(url)) shell.openExternal(url);
   });
 
-  mainWindow.loadURL(`${ORIGIN}/index.html`);
+  loadShell(mainWindow);
 
   if (DEV) mainWindow.webContents.openDevTools({ mode: 'detach' });
 }
@@ -226,7 +297,11 @@ ipcMain.on('window:close', (event) => windowFrom(event)?.close());
 
 /* The renderer names a tool and passes plain arguments; pc.js owns the
    allow-lists, so a prompt injection cannot turn into a shell command. */
-ipcMain.handle('pc:tool', async (_event, payload) => {
+ipcMain.handle('pc:tool', async (event, payload) => {
+  const from = event.senderFrame?.url || event.sender?.getURL?.() || '';
+  if (!isTrustedShellUrl(from)) {
+    return { ok: false, error: 'desktop control is only available to the Seas AI shell' };
+  }
   try {
     const result = await pcTools.invoke(payload?.tool, payload?.args);
     return { ok: true, result };
@@ -250,6 +325,7 @@ if (!app.requestSingleInstanceLock()) {
     app.setAppUserModelId('com.seas.ai');
     protocol.handle('app', serveFile);
     hardenSession();
+    console.log(`[seas] UI source: ${CLOUD_ENTRY || 'bundled files'}`);
     createWindow();
 
     app.on('activate', () => {
