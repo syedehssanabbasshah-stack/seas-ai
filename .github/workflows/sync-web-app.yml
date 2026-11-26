@@ -1,0 +1,51 @@
+name: Sync the web app page
+
+# The Generation-3 page (male/female characters, Agent Town, voice) is one big
+# index.html. This imports the exact page that is live on Cloudflare into the
+# repo, so the bundled desktop shell, the Pages build and the installers all
+# carry the same file. Run it after publishing a new page on the site.
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Page to copy
+        required: false
+        default: https://seas-ai-agent.pages.dev/
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the published page
+        env:
+          URL: ${{ inputs.url || 'https://seas-ai-agent.pages.dev/' }}
+        run: |
+          curl -fsSL "$URL" -o index.html
+          python3 - <<'PY'
+          import pathlib
+          page = pathlib.Path('index.html')
+          text = page.read_text(encoding='utf-8')
+          assert len(text) > 200_000, f'page looks too small: {len(text)}'
+          assert 'SEAS' in text, 'page does not look like the Seas AI app'
+          text = text.replace('<title>SEAS-AI-AGENT</title>', '<title>Seas AI</title>', 1)
+          page.write_text(text, encoding='utf-8')
+          print('index.html', len(text.encode()), 'bytes')
+          PY
+
+      - name: Commit
+        run: |
+          git config user.name "Seas AI"
+          git config user.email "seas-ai@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "index.html is already up to date"
+          else
+            git commit -m "Sync the published Seas AI page into the repo"
+            git push
+          fi
