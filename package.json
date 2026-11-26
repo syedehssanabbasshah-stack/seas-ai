@@ -1,7 +1,7 @@
 {
   "name": "seas-ai-desktop",
   "productName": "Seas AI",
-  "version": "3.1.24",
+  "version": "3.1.25",
   "description": "Seas AI — desktop personal assistant shell (Electron wrapper)",
   "author": "Seas AI",
   "main": "main.js",
@@ -16,8 +16,9 @@
     "dist:win": "electron-builder --win nsis --publish never",
     "dist:linux": "electron-builder --linux AppImage --publish never",
     "web:build": "node scripts/web-build.mjs",
+    "web:zip": "npm run web:build && node scripts/cloudflare-zip.mjs",
     "web:preview": "python3 -m http.server 3002 --directory dist-web --bind 0.0.0.0",
-    "web:deploy": "wrangler pages deploy dist-web --project-name seas-ai"
+    "web:deploy": "wrangler pages deploy dist-web --project-name seas-ai-agent"
   },
   "devDependencies": {
     "electron": "^45.4.1",
@@ -38,18 +39,12 @@
       "pc.js",
       "preload.js",
       "cloud.json",
+      "manifest.webmanifest",
       "assets/**/*",
       "package.json"
     ],
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
       "artifactName": "Seas-AI-${version}-Setup.${ext}"
     },
     "nsis": {
@@ -64,14 +59,7 @@
       "uninstallDisplayName": "Seas AI ${version}"
     },
     "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
+      "target": [{ "target": "AppImage", "arch": ["x64"] }],
       "syncDesktopName": true,
       "category": "Utility",
       "synopsis": "Sci-fi AI desktop assistant",
