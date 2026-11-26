@@ -129,6 +129,50 @@ Node integration and a sandboxed preload, and a second launch focuses the existi
 Packaging is wired up with `electron-builder` (see **Installers** above); the app ships as an
 NSIS `.exe` installer on Windows and an `.AppImage` on Linux.
 
+## Cloud shell (Cloudflare Pages) → one UI for web and desktop
+
+The web build is what ships to Cloudflare, and the desktop app **loads that same page**, so a
+change published on Cloudflare appears in the PC app on the next launch. Nothing is copied into
+the installer for the UI: the bundled files are only the offline fallback.
+
+How it is wired:
+
+- `scripts/web-build.mjs` collects the browser build into `dist-web/` (`index.html`, `assets/`,
+  `_headers`). That folder is the Cloudflare Pages output — it never contains `main.js`,
+  `preload.js` or `pc.js`.
+- `cloud.json` holds one setting, the URL of the published site:
+
+```json
+{ "url": "https://seas-ai.pages.dev", "clearCache": true }
+```
+
+  With a `url` the app loads it on startup and clears the HTTP cache first, so a fresh deploy is
+  never hidden behind a stale module. With an empty `url` — or `npm start -- --local`, or
+  `SEAS_CLOUD_URL` unset — the app opens its bundled files and works offline.
+- If the cloud URL does not answer, the window falls back to the bundled files instead of showing
+  an error page, and says so in the terminal.
+- Only the bundled shell origin and the configured cloud origin keep the window buttons and the
+  desktop toolkit; any other page that loads inside the window is refused.
+
+### Publish the site (once)
+
+```bash
+npm run web:build          # → dist-web/ (index.html + assets + _headers)
+npm run web:preview        # http://localhost:3002 to check it
+```
+
+Then either connect the repo in the Cloudflare dashboard — **Workers & Pages → Create → Pages →
+Connect to Git**, build command `npm run web:build`, output directory `dist-web` — or deploy from
+this machine:
+
+```bash
+npx wrangler pages deploy dist-web --project-name seas-ai
+```
+
+After the first deploy, put the Pages URL into `cloud.json`. From then on every published change
+is live on the site **and** in the desktop app (`npm start`), while `npm run dist:win` /
+`dist:linux` keep building installers from the same repo.
+
 ## Desktop control (PC app)
 
 In the Electron build the assistant can actually act on the machine. Every action is a named
@@ -207,6 +251,10 @@ main.js                 Electron main process (app:// scheme, window, permission
 pc.js                   desktop control toolkit: apps, sound, files, screenshots, power, research
 preload.js              contextBridge window-control + PC-control API
 assets/js/desktop.js    renderer bridge to the PC layer (browser-safe fallback)
+cloud.json              cloud shell URL — desktop app loads the Cloudflare build (empty = bundled)
+scripts/web-build.mjs   collects index.html + assets + _headers into dist-web/ for Cloudflare Pages
+web/_headers            Cloudflare Pages response headers (no-cache HTML, cached assets)
+wrangler.toml           Cloudflare Pages project config (output: dist-web)
 package.json            Electron scripts, electron-builder config, dev dependencies
 build/icon.png          optional app icon — not committed here; add it and re-enable the
                         win.icon / linux.icon fields to make installers use it
