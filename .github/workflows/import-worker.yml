@@ -1,0 +1,50 @@
+name: Import the Cloudflare worker
+
+# The deployed Cloudflare Pages worker is uploaded in `worker/w*.b64` (gzipped,
+# base64) because the file is large. This rebuilds `_worker.js` from those
+# pieces, checks it, and removes the pieces and this workflow.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Rebuild _worker.js
+        run: |
+          python3 - <<'PY'
+          import base64, gzip, hashlib
+          from pathlib import Path
+
+          read = lambda p: Path(p).read_text().replace('\n', '')
+          # one character was lost while uploading this piece
+          w3 = read('worker/w3.b64')
+          w3 = w3[:76] + 'C' + w3[76:]
+          data = read('worker/w0.b64') + read('worker/w1.b64') + read('worker/w2.b64') + w3 + read('worker/w4.b64')
+          js = gzip.decompress(base64.b64decode(data))
+          Path('_worker.js').write_bytes(js)
+          digest = hashlib.sha256(js).hexdigest()
+          print(len(js), 'bytes', digest)
+          assert digest == 'e8b097d27c9d519d9e629c926c37cd537ed024ba94dad3cad4af42f4aeda850c', 'worker hash mismatch'
+          PY
+          node --check _worker.js
+
+      - name: Commit
+        run: |
+          git config user.name "Seas AI"
+          git config user.email "seas-ai@users.noreply.github.com"
+          git rm -r worker
+          git rm .github/workflows/import-worker.yml
+          git add _worker.js
+          git commit -m "Import the Cloudflare worker backend into the repo"
+          git push
