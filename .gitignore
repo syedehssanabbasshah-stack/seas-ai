@@ -10,3 +10,7 @@ npm-debug.log*
 artifacts/*.AppImage
 artifacts/*.exe
 artifacts/*.zip
+
+dist-cloudflare/
+_upstream/
+_parts/
