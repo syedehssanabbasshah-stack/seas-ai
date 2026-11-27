@@ -1,0 +1,30 @@
+name: Sync the themed build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack the build
+        run: |
+          set -euo pipefail
+          cat sync/c*.b64 > /tmp/theme.b64
+          base64 -d /tmp/theme.b64 > /tmp/theme.tgz
+          tar -xzf /tmp/theme.tgz -C .
+          ls -l index.html assets/js/avatar.js assets/js/cloud.js
+      - name: Commit
+        run: |
+          set -euo pipefail
+          git config user.name "Seas AI"
+          git config user.email "seas-ai@users.noreply.github.com"
+          rm -rf sync
+          git rm -r --quiet .github/workflows/sync-theme.yml
+          git add -A
+          git commit -m "Restore the themed shell with the character, cloud brain, voice, news and image skills"
+          git push
