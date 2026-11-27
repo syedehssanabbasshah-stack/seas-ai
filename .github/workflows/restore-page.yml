@@ -1,0 +1,33 @@
+name: Restore the app page
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Take the page from the last release tag
+        run: |
+          set -euo pipefail
+          git show v3.1.25:index.html > index.html
+          wc -c index.html
+      - name: Drop the temporary sync files
+        run: |
+          set -euo pipefail
+          git rm -r --quiet sync || true
+          git rm --quiet .github/workflows/sync-theme.yml || true
+      - name: Commit
+        run: |
+          set -euo pipefail
+          git config user.name "Seas AI"
+          git config user.email "seas-ai@users.noreply.github.com"
+          git add -A
+          git commit -m "Restore the published app page and drop the temporary sync files" || true
+          git push
