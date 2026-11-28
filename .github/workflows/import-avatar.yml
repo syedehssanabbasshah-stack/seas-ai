@@ -1,0 +1,47 @@
+name: Import the character avatar
+
+# `sync/p*.b64` hold a base64 tar.gz of the stonic-style character renderer
+# (assets/js/avatar.js, assets/js/app.js, assets/js/cloud.js). This joins the
+# pieces, verifies the archive, extracts it and commits plain source files, so
+# the repo never keeps the pieces around.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show the pieces
+        run: |
+          for f in sync/p*.b64; do
+            echo "$(wc -c < "$f") bytes  $(sha256sum "$f" | cut -d' ' -f1)  $f"
+          done
+
+      - name: Unpack the payload
+        run: |
+          cat sync/p*.b64 | tr -d '\n' > /tmp/payload.b64
+          base64 -d /tmp/payload.b64 > /tmp/payload.tgz
+          echo "7b6c11f35b76476970879ea9783c2a1005006c51a23f537d8ea3c37bac06d2c6  /tmp/payload.tgz" | sha256sum -c -
+          tar -tzf /tmp/payload.tgz
+          tar -xzf /tmp/payload.tgz
+          cp assets/js/avatar.js /tmp/avatar.mjs
+          cp assets/js/app.js /tmp/app.mjs
+          node --check /tmp/avatar.mjs
+          node --check /tmp/app.mjs
+          wc -c assets/js/avatar.js assets/js/app.js assets/js/cloud.js
+
+      - name: Commit
+        run: |
+          git config user.name "Seas AI"
+          git config user.email "seas-ai@users.noreply.github.com"
+          git rm -r -q sync
+          git rm -q .github/workflows/import-avatar.yml
+          git add assets/js/avatar.js assets/js/cloud.js assets/js/app.js
+          git commit -m "Add the stonic-style character: face, hair, eyes and headset"
+          git push
